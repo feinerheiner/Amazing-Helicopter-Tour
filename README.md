@@ -30,6 +30,7 @@ P: Partial
 E: Empty
 
 Each Reservation and FlightCharter will have a status (“R”, “A”, “C” or “X”)
+
 R: Reserved
 A: Active
 C: Completed or canceled with fee
