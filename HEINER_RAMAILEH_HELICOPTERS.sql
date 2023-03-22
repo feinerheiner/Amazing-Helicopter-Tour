@@ -270,7 +270,6 @@ ALTER TABLE [TOUR]
 	CHECK (CapacityStatus IN ('F', 'P', 'E'))
 GO
 
-
 --Insert Statements for CUSTOMER table
 INSERT INTO CUSTOMER
 VALUES ('Joe', 'Bob', '333 W 3000 S', NULL, 'Salt Lake City', 'UT', '84111', 'USA', '801-999-9999', NULL, 0, NULL); 
@@ -284,18 +283,25 @@ VALUES ('Jill', 'Thompson', '444 E 5000 S', NULL, 'Bountiful', 'UT', '84010', 'U
 INSERT INTO CUSTOMER
 VALUES ('Kieth', 'Cozart', '3000 E 2212 S', NULL, 'Layton', 'UT', '84041', 'USA', '801-634-4244', NULL, 0, NULL); 
 
+INSERT INTO GUEST
+VALUES ('Anita', 'Proul', '4462 Maybeck Place', 'Unit A', 'Provo', 'UT', '84601', 'USA', '801-957-4769',' Anita@cougarlife.com', ''); 
+
+INSERT INTO CUSTOMER
+VALUES ('Anita', 'Proul', '4462 Maybeck Place', 'Unit A', 'Provo', 'UT', '84601', 'USA', '801-957-4769',' Anita@cougarlife.com', 1, 1500); 
+
+
 --Insert Statements for RESERVATION table
 INSERT INTO RESERVATION
-VALUES ('3/2/2023', 'R', '1st Time Customer', 6000); 
+VALUES ('3/2/2023', 'R', '1st Time Customer', 3000); 
 
 INSERT INTO RESERVATION
-VALUES ('3/11/2023', 'R', 'Regular Customer. 10th tour booked', 6001); 
+VALUES ('3/11/2023', 'R', 'Regular Customer. 10th tour booked', 3001); 
 
 INSERT INTO RESERVATION
-VALUES ('4/13/2023', 'A', '', 6002); 
+VALUES ('4/13/2023', 'A', '', 3002); 
 
 INSERT INTO RESERVATION
-VALUES ('2/23/2023', 'C', '', 6003); 
+VALUES ('2/23/2023', 'C', '', 3003); 
 
 --Insert Statements for BILLINGCATEGORY
 INSERT INTO BILLINGCATEGORY
@@ -320,6 +326,30 @@ INSERT INTO BILLINGCATEGORY
 VALUES ('County Sales Tax', 0);
 
 --Insert Statements for BILLING
+INSERT INTO BILLING
+VALUES ('Seat Rate', 60.00, 3, '2/23/2023', 1, 1);
 
 INSERT INTO BILLING
-VALUES ('Seat Rate', 60.00, 3, );
+VALUES ('Pepsi 20 oz', 4.00, 5, '2/23/2023', 1, 2);
+
+INSERT INTO BILLING
+VALUES ('Cheeseburger', 6.50, 3, '2/23/2023', 1, 3);
+
+INSERT INTO BILLING
+VALUES ('Souvenir Pin', 3.00, 1, '2/23/2023', 1, 4);
+
+INSERT INTO BILLING
+VALUES ('Parking', 20.00, 1, '2/23/2023', 1, 5);
+
+INSERT INTO BILLING
+VALUES ('County Tax', 26.19, 1, '2/23/2023', 1, 7);
+
+
+--Insert statement for FLIGHTCHARTER
+--INSERT INTO FLIGHTCHARTER('C', '2/23/2023', 
+
+
+SELECT * FROM CUSTOMER
+SELECT * FROM RESERVATION
+SELECT * FROM BILLINGCATEGORY
+SELECT * FROM BILLING
