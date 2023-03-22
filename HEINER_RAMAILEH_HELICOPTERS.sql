@@ -52,7 +52,7 @@ CREATE TABLE [BILLING] (
   [CharterBillingID]		smallint		NOT NULL		IDENTITY,
   [BillingDescription]		char(30)		NOT NULL,
   [BillingAmount]			smallmoney		NOT NULL,
-  [BillingItemQty]			smallmoney		NOT NULL,
+  [BillingItemQty]			tinyint			NOT NULL,
   [BillingItemDate]			date			NOT NULL,
   [FlightCharterID]			smallint		NOT NULL,
   [BillingCategoryID]		smallint		NOT NULL,
@@ -79,7 +79,7 @@ CREATE TABLE [ROUTE] (
 CREATE TABLE [TOUR] (
   [TourID]					smallint		NOT NULL		IDENTITY,
   [CapacityStatus]			char(1)			NOT NULL,
-  [TourCapacity]			smallint		NOT NULL,
+  [SeatRate]				smallmoney		NOT NULL,
   [HelicopterID]			smallint		NOT NULL,
   [RouteID]					smallint		NOT NULL,
   [TourTimeID]				smallint		NOT NULL,
@@ -92,7 +92,6 @@ CREATE TABLE [FLIGHTCHARTER] (
   [Status]					char(1)			NOT NULL,
   [CustomerArrivalTime]		smalldatetime	NOT NULL,
   [GuestCount]				tinyint			NOT NULL,
-  [CharterPrice]			smallmoney		NOT NULL,
   [TourID]					smallint		NOT NULL,
   [DiscountID]				smallint		NOT NULL,
   [ReservationID]			smallint		NOT NULL,
@@ -102,7 +101,7 @@ CREATE TABLE [FLIGHTCHARTER] (
 CREATE TABLE [BILLINGCATEGORY] (
   [BillingCategoryID]		smallint		NOT NULL		IDENTITY,
   [BillingCatDescription]	varchar(30)		NOT NULL,
-  [BillingCatTaxable]		smallmoney		NOT NULL,
+  [BillingCatTaxable]		bit				NOT NULL,
   PRIMARY KEY ([BillingCategoryID])
 );
 
@@ -132,8 +131,6 @@ CREATE TABLE [CUSTOMER] (
   [GuestID]					smallint		NULL,
   PRIMARY KEY ([CustomerID])
 );
-
---CREATE INDEX [FK1] ON  [CUSTOMER] ([GuestID]);
 
 CREATE TABLE [HELICOPTER] (
   [HelicopterID]			smallint		NOT NULL		IDENTITY,
@@ -268,14 +265,61 @@ ALTER TABLE [FLIGHTCHARTER]
 	ADD CONSTRAINT CK_CharterStatusMustMatch
 	CHECK (Status IN ('R', 'A', 'C', 'X'))
 
-GO
-
 ALTER TABLE [TOUR]
 	ADD CONSTRAINT CK_CapacityStatusMustMatch
-	CHECK (Status IN ('F', 'P', 'E'))
-
+	CHECK (CapacityStatus IN ('F', 'P', 'E'))
 GO
 
---this is a test
 
+--Insert Statements for CUSTOMER table
+INSERT INTO CUSTOMER
+VALUES ('Joe', 'Bob', '333 W 3000 S', NULL, 'Salt Lake City', 'UT', '84111', 'USA', '801-999-9999', NULL, 0, NULL); 
 
+INSERT INTO CUSTOMER
+VALUES ('Sammy', 'Sosa', '200 North Main Street', 'Apt 10', 'Chicago', 'IL', '60007', 'USA', '801-132-3113', NULL, 0, NULL); 
+
+INSERT INTO CUSTOMER
+VALUES ('Jill', 'Thompson', '444 E 5000 S', NULL, 'Bountiful', 'UT', '84010', 'USA', '801-232-2323', NULL, 0, NULL); 
+
+INSERT INTO CUSTOMER
+VALUES ('Kieth', 'Cozart', '3000 E 2212 S', NULL, 'Layton', 'UT', '84041', 'USA', '801-634-4244', NULL, 0, NULL); 
+
+--Insert Statements for RESERVATION table
+INSERT INTO RESERVATION
+VALUES ('3/2/2023', 'R', '1st Time Customer', 6000); 
+
+INSERT INTO RESERVATION
+VALUES ('3/11/2023', 'R', 'Regular Customer. 10th tour booked', 6001); 
+
+INSERT INTO RESERVATION
+VALUES ('4/13/2023', 'A', '', 6002); 
+
+INSERT INTO RESERVATION
+VALUES ('2/23/2023', 'C', '', 6003); 
+
+--Insert Statements for BILLINGCATEGORY
+INSERT INTO BILLINGCATEGORY
+VALUES ('SeatRate', 1);
+
+INSERT INTO BILLINGCATEGORY
+VALUES ('Drinks', 1);
+
+INSERT INTO BILLINGCATEGORY
+VALUES ('Food', 1);
+
+INSERT INTO BILLINGCATEGORY
+VALUES ('Souvenir', 1);
+
+INSERT INTO BILLINGCATEGORY
+VALUES ('Parking', 0);
+
+INSERT INTO BILLINGCATEGORY
+VALUES ('Photos', 1);
+
+INSERT INTO BILLINGCATEGORY
+VALUES ('County Sales Tax', 0);
+
+--Insert Statements for BILLING
+
+INSERT INTO BILLING
+VALUES ('Seat Rate', 60.00, 3, );
