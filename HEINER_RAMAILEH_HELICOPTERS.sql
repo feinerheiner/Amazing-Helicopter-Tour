@@ -269,3 +269,10 @@ ALTER TABLE [FLIGHTCHARTER]
 	CHECK (Status IN ('R', 'A', 'C', 'X'))
 
 GO
+
+ALTER TABLE [TOUR]
+	ADD CONSTRAINT CK_CapacityStatusMustMatch
+	CHECK (Status IN ('F', 'P', 'E'))
+
+GO
+
