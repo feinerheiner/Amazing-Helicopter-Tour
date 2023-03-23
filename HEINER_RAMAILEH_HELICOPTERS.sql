@@ -272,77 +272,52 @@ GO
 
 --Insert Statements for CUSTOMER table
 INSERT INTO CUSTOMER
-VALUES ('Joe', 'Bob', '333 W 3000 S', NULL, 'Salt Lake City', 'UT', '84111', 'USA', '801-999-9999', NULL, 0, NULL); 
-
-INSERT INTO CUSTOMER
-VALUES ('Sammy', 'Sosa', '200 North Main Street', 'Apt 10', 'Chicago', 'IL', '60007', 'USA', '801-132-3113', NULL, 0, NULL); 
-
-INSERT INTO CUSTOMER
-VALUES ('Jill', 'Thompson', '444 E 5000 S', NULL, 'Bountiful', 'UT', '84010', 'USA', '801-232-2323', NULL, 0, NULL); 
-
-INSERT INTO CUSTOMER
-VALUES ('Kieth', 'Cozart', '3000 E 2212 S', NULL, 'Layton', 'UT', '84041', 'USA', '801-634-4244', NULL, 0, NULL); 
-
-INSERT INTO GUEST
-VALUES ('Anita', 'Proul', '4462 Maybeck Place', 'Unit A', 'Provo', 'UT', '84601', 'USA', '801-957-4769',' Anita@cougarlife.com', ''); 
-
-INSERT INTO CUSTOMER
-VALUES ('Anita', 'Proul', '4462 Maybeck Place', 'Unit A', 'Provo', 'UT', '84601', 'USA', '801-957-4769',' Anita@cougarlife.com', 1, 1500); 
-
+VALUES	('Joe', 'Bob', '333 W 3000 S', NULL, 'Salt Lake City', 'UT', '84111', 'USA', '801-999-9999', NULL, 0, NULL),
+		('Sammy', 'Sosa', '200 North Main Street', 'Apt 10', 'Chicago', 'IL', '60007', 'USA', '801-132-3113', NULL, 0, NULL),
+		('Jill', 'Thompson', '444 E 5000 S', NULL, 'Bountiful', 'UT', '84010', 'USA', '801-232-2323', NULL, 0, NULL),
+		('Kieth', 'Cozart', '3000 E 2212 S', NULL, 'Layton', 'UT', '84041', 'USA', '801-634-4244', NULL, 0, NULL),
+		('Anita', 'Proul', '4462 Maybeck Place', 'Unit A', 'Provo', 'UT', '84601', 'USA', '801-957-4769',' Anita@cougarlife.com', 1, 1500); 
 
 --Insert Statements for RESERVATION table
 INSERT INTO RESERVATION
-VALUES ('3/2/2023', 'R', '1st Time Customer', 3000); 
-
-INSERT INTO RESERVATION
-VALUES ('3/11/2023', 'R', 'Regular Customer. 10th tour booked', 3001); 
-
-INSERT INTO RESERVATION
-VALUES ('4/13/2023', 'A', '', 3002); 
-
-INSERT INTO RESERVATION
-VALUES ('2/23/2023', 'C', '', 3003); 
+VALUES	('3/2/2023', 'R', '1st Time Customer', 3000),
+		('3/11/2023', 'R', 'Regular Customer. 10th tour booked', 3001),
+		('4/13/2023', 'A', '', 3002),
+		('2/23/2023', 'C', '', 3003); 
 
 --Insert Statements for BILLINGCATEGORY
 INSERT INTO BILLINGCATEGORY
-VALUES ('SeatRate', 1);
-
-INSERT INTO BILLINGCATEGORY
-VALUES ('Drinks', 1);
-
-INSERT INTO BILLINGCATEGORY
-VALUES ('Food', 1);
-
-INSERT INTO BILLINGCATEGORY
-VALUES ('Souvenir', 1);
-
-INSERT INTO BILLINGCATEGORY
-VALUES ('Parking', 0);
-
-INSERT INTO BILLINGCATEGORY
-VALUES ('Photos', 1);
-
-INSERT INTO BILLINGCATEGORY
-VALUES ('County Sales Tax', 0);
+VALUES	('SeatRate', 1),
+		('Drinks', 1),
+		('Food', 1),
+		('Souvenir', 1),
+		('Parking', 0),
+		('Photos', 1),
+		('County Sales Tax', 0);
 
 --Insert Statements for BILLING
 INSERT INTO BILLING
-VALUES ('Seat Rate', 60.00, 3, '2/23/2023', 1, 1);
+VALUES	('Seat Rate', 60.00, 3, '2/23/2023', 1, 1),
+		('Pepsi 20 oz', 4.00, 5, '2/23/2023', 1, 2),
+		('Cheeseburger', 6.50, 3, '2/23/2023', 1, 3),
+		('Souvenir Pin', 3.00, 1, '2/23/2023', 1, 4),
+		('Parking', 20.00, 1, '2/23/2023', 1, 5),
+		('County Tax', 26.19, 1, '2/23/2023', 1, 7)
 
-INSERT INTO BILLING
-VALUES ('Pepsi 20 oz', 4.00, 5, '2/23/2023', 1, 2);
+INSERT INTO DISCOUNT
+VALUES	('No Discount (Default)', '2039-12-31', 'Default Discount', 0, 0),
+		('Internet Discount', '2023-12-31', 'Discount for anyone who books tour online', 10, 0),
+		('Hotel Guest Discount', '2023-12-31', 'Discount for anyone who is currently a guest at the hotel', 10, 0),
+		('Multiple Passenger Discount', '2023-12-31', 'Discount for anyone who books more than 4 seats', 0, 50),
+		('TV Commercial Discount', '2023-12-31', 'Discount found on TV, Take $20 off your tour price', 0, 20)
 
-INSERT INTO BILLING
-VALUES ('Cheeseburger', 6.50, 3, '2/23/2023', 1, 3);
-
-INSERT INTO BILLING
-VALUES ('Souvenir Pin', 3.00, 1, '2/23/2023', 1, 4);
-
-INSERT INTO BILLING
-VALUES ('Parking', 20.00, 1, '2/23/2023', 1, 5);
-
-INSERT INTO BILLING
-VALUES ('County Tax', 26.19, 1, '2/23/2023', 1, 7);
+--Insert statement for FLIGHTCHARTER
+INSERT INTO FLIGHTCHARTER
+VALUES	('R', 3, NULL, 1, 1, 1),
+		('R', 2, NULL, 2, 2, 2),
+		('A', 2, '2023/04/29 6:00:00 PM', 3, 3, 3),
+		('C', 4, '2023/04/29 7:00:00 AM', 4, 4,4),
+		('R', 3, NULL, 3, 5, 2)
 
 
 --Insert statement for FLIGHTCHARTER
