@@ -358,12 +358,12 @@ INSERT INTO HELICOPTER
 PRINT 'Inserting data into ROUTE Table'
 INSERT INTO ROUTE --Ogden is 2300
 	VALUES
-		(230, 5.5, 'Bear Lake', 'Flight over Logan and to bear lake', 2300),
-		(90, 2.5, 'Great Salt Lake', 'Flight over the Spiral Jetty and Antelope Island', 2300),
-		(300, 5.5, 'Uinta Mountains', 'Flight over Wasatch to Uinta', 2300),
-		(180, 4.5, 'Provo', 'Flight over the city skyline to Provo', 2300),
-		(50, 2.5, 'Salt Lake City', 'Flight over Salt Lake City', 2300),
-		(130, 4.5, 'Park City', 'Flight over the mountains to Park City', 2300)
+		(230,	5.5, 'Bear Lake',		'Flight over Logan and to bear lake',				2300), --1265
+		(90,	2.5, 'Great Salt Lake', 'Flight over the Spiral Jetty and Antelope Island', 2300), --225
+		(300,	5.5, 'Uinta Mountains', 'Flight over Wasatch to Uinta',						2300), --1650
+		(180,	4.5, 'Provo',			'Flight over the city skyline to Provo',			2300), --810
+		(50,	2.5, 'Salt Lake City',	'Flight over Salt Lake City',						2300), --125
+		(130,	4.5, 'Park City',		'Flight over the mountains to Park City',			2300)  --585
 
 PRINT 'Inserting data into TOURTIME Table'
 INSERT INTO TOURTIME
@@ -382,6 +382,14 @@ INSERT INTO TOURTIME
 		('2023/04/29 6:30:00 PM', NULL),
 		('2023/04/29 7:00:00 PM', NULL),
 		('2023/04/29 7:30:00 PM', NULL)
+
+INSERT INTO TOUR
+	VALUES
+		('F', 377.5, 1, 1, 1),
+		('P', 225, 2, 2, 2),
+		('E', 315, 3, 3, 7),
+		('E', 204, 1, 2, 14)
+
 
 SELECT * FROM CUSTOMER
 SELECT * FROM RESERVATION
