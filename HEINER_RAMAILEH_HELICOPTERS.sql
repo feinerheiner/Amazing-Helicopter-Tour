@@ -271,6 +271,7 @@ ALTER TABLE [TOUR]
 GO
 
 --Insert Statements for CUSTOMER table
+PRINT 'Inserting data into CUSTOMER Table'
 INSERT INTO CUSTOMER
 VALUES	('Joe', 'Bob', '333 W 3000 S', NULL, 'Salt Lake City', 'UT', '84111', 'USA', '801-999-9999', NULL, 0, NULL),
 		('Sammy', 'Sosa', '200 North Main Street', 'Apt 10', 'Chicago', 'IL', '60007', 'USA', '801-132-3113', NULL, 0, NULL),
@@ -279,6 +280,7 @@ VALUES	('Joe', 'Bob', '333 W 3000 S', NULL, 'Salt Lake City', 'UT', '84111', 'US
 		('Anita', 'Proul', '4462 Maybeck Place', 'Unit A', 'Provo', 'UT', '84601', 'USA', '801-957-4769',' Anita@cougarlife.com', 1, 1500); 
 
 --Insert Statements for RESERVATION table
+PRINT 'Inserting data into RESERVATION Table'
 INSERT INTO RESERVATION
 VALUES	('3/2/2023', 'R', '1st Time Customer', 3000),
 		('3/11/2023', 'R', 'Regular Customer. 10th tour booked', 3001),
@@ -286,6 +288,7 @@ VALUES	('3/2/2023', 'R', '1st Time Customer', 3000),
 		('2/23/2023', 'C', '', 3003); 
 
 --Insert Statements for BILLINGCATEGORY
+PRINT 'Inserting data into BILLINGCATEGORY Table'
 INSERT INTO BILLINGCATEGORY
 VALUES	('SeatRate', 1),
 		('Drinks', 1),
@@ -296,6 +299,7 @@ VALUES	('SeatRate', 1),
 		('County Sales Tax', 0);
 
 --Insert Statements for BILLING
+PRINT 'Inserting data into BILLING Table'
 INSERT INTO BILLING
 VALUES	('Seat Rate', 60.00, 3, '2/23/2023', 1, 1),
 		('Pepsi 20 oz', 4.00, 5, '2/23/2023', 1, 2),
@@ -304,6 +308,8 @@ VALUES	('Seat Rate', 60.00, 3, '2/23/2023', 1, 1),
 		('Parking', 20.00, 1, '2/23/2023', 1, 5),
 		('County Tax', 26.19, 1, '2/23/2023', 1, 7)
 
+--Insert Statements for DISCOUNT
+PRINT 'Inserting data into DISCOUNT Table'
 INSERT INTO DISCOUNT
 VALUES	('No Discount (Default)', '2039-12-31', 'Default Discount', 0, 0),
 		('Internet Discount', '2023-12-31', 'Discount for anyone who books tour online', 10, 0),
@@ -312,6 +318,7 @@ VALUES	('No Discount (Default)', '2039-12-31', 'Default Discount', 0, 0),
 		('TV Commercial Discount', '2023-12-31', 'Discount found on TV, Take $20 off your tour price', 0, 20)
 
 --Insert statement for FLIGHTCHARTER
+PRINT 'Inserting data into FLIGHTCHARTER Table'
 INSERT INTO FLIGHTCHARTER
 VALUES	('R', 3, NULL, 1, 1, 1),
 		('R', 2, NULL, 2, 2, 2),
@@ -319,10 +326,7 @@ VALUES	('R', 3, NULL, 1, 1, 1),
 		('C', 4, '2023/04/29 7:00:00 AM', 4, 4,4),
 		('R', 3, NULL, 3, 5, 2)
 
-
---Insert statement for FLIGHTCHARTER
---INSERT INTO FLIGHTCHARTER('C', '2/23/2023', 
-
+--Insert Statements for HELICOPTER
 PRINT 'Inserting data into HELICOPTER Table'
 INSERT INTO HELICOPTER
 	VALUES
@@ -330,6 +334,7 @@ INSERT INTO HELICOPTER
 		('Thor',		5,  300, 900),
 		('The Bus',		10, 400, 1500)
 
+--Insert Statements for ROUTE
 PRINT 'Inserting data into ROUTE Table'
 INSERT INTO ROUTE --Ogden is 2300
 	VALUES
@@ -340,6 +345,7 @@ INSERT INTO ROUTE --Ogden is 2300
 		(50,	2.5, 'Salt Lake City',	'Flight over Salt Lake City',						2300), --125
 		(130,	4.5, 'Park City',		'Flight over the mountains to Park City',			2300)  --585
 
+--Insert Statements for TOURTIME
 PRINT 'Inserting data into TOURTIME Table'
 INSERT INTO TOURTIME
 	VALUES
@@ -358,6 +364,9 @@ INSERT INTO TOURTIME
 		('2023/04/29 7:00:00 PM', NULL),
 		('2023/04/29 7:30:00 PM', NULL)
 
+
+--Insert Statements for TOUR
+PRINT 'Inserting data into TOUR Table'
 INSERT INTO TOUR
 	VALUES
 		('F', 377.5, 1, 1, 1),
