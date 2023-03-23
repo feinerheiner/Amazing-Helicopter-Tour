@@ -34,20 +34,6 @@ GO
 
 USE HEINER_RAMAILEH_HELICOPTERS
 
-CREATE TABLE [HOTEL] (
-  [HotelID]					smallint		NOT NULL,
-  [HotelName]				varchar(30)		NOT NULL,
-  [HotelAddress]			varchar(30)		NOT NULL,
-  [HotelCity]				varchar(20)		NOT NULL,
-  [HotelState]				char(2)			NULL,
-  [HotelCountry]			varchar(20)		NOT NULL,
-  [HotelPostalCode]			char(10)		NOT NULL,
-  [HotelStarRating]			char(1)			NULL,
-  [HotelPictureLink]		varchar(100)	NULL,
-  [TaxLocationID]			smallint		NOT NULL,
-  PRIMARY KEY ([HotelID])
-);
-
 CREATE TABLE [BILLING] (
   [CharterBillingID]		smallint		NOT NULL		IDENTITY,
   [BillingDescription]		char(30)		NOT NULL,
@@ -141,22 +127,6 @@ CREATE TABLE [HELICOPTER] (
   PRIMARY KEY ([HelicopterID])
 );
 
-CREATE TABLE [GUEST] (
-  [GuestID]					smallint		NOT NULL		IDENTITY(1500,1),
-  [GuestFirst]				varchar(20)		NOT NULL,
-  [GuestLast]				varchar(20)		NOT NULL,
-  [GuestAddress1]			varchar(30)		NOT NULL,
-  [GuestAddress2]			varchar(30)		NULL,
-  [GuestCity]				varchar(30)		NOT NULL,
-  [GuestState]				char(2)			NULL,
-  [GuestPostalCode]			char(10)		NOT NULL,
-  [GuestCountry]			varchar(10)		NOT NULL,
-  [GuestPhone]				varchar(20)		NOT NULL,
-  [GuestEmail]				varchar(30)		NULL,
-  [GuestComments]			varchar(200)	NULL,
-  PRIMARY KEY ([GuestID])
-);
-
 CREATE TABLE [RESERVATION] (
   [ReservationID]			smallint		NOT NULL		IDENTITY(6000,1),
   [ReservationDate]			date			NOT NULL,
@@ -166,23 +136,7 @@ CREATE TABLE [RESERVATION] (
   PRIMARY KEY ([ReservationID])
 );
 
-CREATE TABLE [TAXRATE] (
-  [TaxLocationID]			smallint		NOT NULL		IDENTITY,
-  [TaxDescription]			varchar(30)		NOT NULL,
-  [RoomTaxRate]				decimal(6,4)	NOT NULL,
-  [SalesTaxRate]			decimal(6,4)	NOT NULL,
-  PRIMARY KEY ([TaxLocationID])
-);
-
 --Now creating foreign keys
-ALTER TABLE [HOTEL]
-	ADD
-
-	CONSTRAINT FK_TaxLocationID
-	FOREIGN KEY ([TaxLocationID]) REFERENCES  [TAXRATE] ([TaxLocationID])
-	ON UPDATE CASCADE
-	ON DELETE CASCADE
-
 ALTER TABLE [ROUTE]
 	ADD
 
