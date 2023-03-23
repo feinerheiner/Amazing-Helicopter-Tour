@@ -62,7 +62,7 @@ CREATE TABLE [BILLING] (
 CREATE TABLE [TOURTIME] (
   [TourTimeID]				smallint		NOT NULL		IDENTITY,
   [TourTimeStart]			smalldatetime	NOT NULL,
-  [TourTimeDescription]		varchar(30)		NOT NULL,
+  [TourTimeDescription]		varchar(30)		NULL,
   PRIMARY KEY ([TourTimeID])
 );
 
@@ -348,8 +348,45 @@ VALUES ('County Tax', 26.19, 1, '2/23/2023', 1, 7);
 --Insert statement for FLIGHTCHARTER
 --INSERT INTO FLIGHTCHARTER('C', '2/23/2023', 
 
+PRINT 'Inserting data into HELICOPTER Table'
+INSERT INTO HELICOPTER
+	VALUES
+		('Bumblebee',	6,  350, 1000),
+		('Thor',		5,  300, 900),
+		('The Bus',		10, 400, 1500)
+
+PRINT 'Inserting data into ROUTE Table'
+INSERT INTO ROUTE --Ogden is 2300
+	VALUES
+		(230, 5.5, 'Bear Lake', 'Flight over Logan and to bear lake', 2300),
+		(90, 2.5, 'Great Salt Lake', 'Flight over the Spiral Jetty and Antelope Island', 2300),
+		(300, 5.5, 'Uinta Mountains', 'Flight over Wasatch to Uinta', 2300),
+		(180, 4.5, 'Provo', 'Flight over the city skyline to Provo', 2300),
+		(50, 2.5, 'Salt Lake City', 'Flight over Salt Lake City', 2300),
+		(130, 4.5, 'Park City', 'Flight over the mountains to Park City', 2300)
+
+PRINT 'Inserting data into TOURTIME Table'
+INSERT INTO TOURTIME
+	VALUES
+		('2023/04/28 8:30:00 AM', NULL),
+		('2023/04/28 9:00:00 AM', NULL),
+		('2023/04/28 9:30:00 AM', NULL),
+		('2023/04/28 10:30:00 AM', NULL),
+		('2023/04/28 6:30:00 PM', NULL),
+		('2023/04/28 7:00:00 PM', NULL),
+		('2023/04/28 7:30:00 PM', NULL),
+		('2023/04/29 8:30:00 AM', NULL),
+		('2023/04/29 9:00:00 AM', NULL),
+		('2023/04/29 9:30:00 AM', NULL),
+		('2023/04/29 10:30:00 AM', NULL),
+		('2023/04/29 6:30:00 PM', NULL),
+		('2023/04/29 7:00:00 PM', NULL),
+		('2023/04/29 7:30:00 PM', NULL)
 
 SELECT * FROM CUSTOMER
 SELECT * FROM RESERVATION
 SELECT * FROM BILLINGCATEGORY
 SELECT * FROM BILLING
+SELECT * FROM HELICOPTER
+SELECT * FROM ROUTE
+SELECT * FROM TOURTIME
