@@ -2,7 +2,10 @@
 --Richard Heiner, Rashad Ramaileh
 --3/14/2023
 
-USE master
+
+USE MASTER
+
+GO
 
 IF EXISTS (SELECT * FROM sysdatabases WHERE name='HEINER_RAMAILEH_HELICOPTERS')
 DROP DATABASE HEINER_RAMAILEH_HELICOPTERS
@@ -31,6 +34,13 @@ MAXSIZE = 5MB,
 FILEGROWTH = 25%
 )
 GO
+
+SELECT * FROM OPENQUERY (LOCALSERVER, 'Select HotelID FROM FARMS.dbo.HOTEL') as passthrough
+
+SELECT * FROM OPENQUERY (LOCALSERVER, 'Select * FROM FARMS.dbo.BILLING') as passthrough
+
+SELECT * FROM OPENQUERY (LOCALSERVER, 'Select * FROM FARMS.dbo.GUEST') as passthrough
+
 
 USE HEINER_RAMAILEH_HELICOPTERS
 
@@ -76,8 +86,8 @@ CREATE TABLE [TOUR] (
 CREATE TABLE [FLIGHTCHARTER] (
   [FlightCharterID]			smallint		NOT NULL		IDENTITY,
   [Status]					char(1)			NOT NULL,
-  [CustomerArrivalTime]		smalldatetime	NOT NULL,
   [GuestCount]				tinyint			NOT NULL,
+  [CustomerArrivalTime]		smalldatetime	NULL,
   [TourID]					smallint		NOT NULL,
   [DiscountID]				smallint		NOT NULL,
   [ReservationID]			smallint		NOT NULL,
@@ -137,14 +147,6 @@ CREATE TABLE [RESERVATION] (
 );
 
 --Now creating foreign keys
-ALTER TABLE [ROUTE]
-	ADD
-
-	CONSTRAINT FK_HotelID
-	FOREIGN KEY ([HotelID]) REFERENCES  [HOTEL] ([HotelID])
-	ON UPDATE CASCADE
-	ON DELETE CASCADE
-
 ALTER TABLE [TOUR]
 	ADD
 
@@ -189,14 +191,6 @@ ALTER TABLE [RESERVATION]
 	ON UPDATE CASCADE
 	ON DELETE CASCADE
 
-ALTER TABLE [CUSTOMER]
-	ADD
-
-	CONSTRAINT FK_GuestID
-	FOREIGN KEY ([GuestID]) REFERENCES  [GUEST] ([GuestID])
-	ON UPDATE CASCADE
-	ON DELETE CASCADE
-
 ALTER TABLE [BILLING]
 	ADD
 
@@ -231,7 +225,8 @@ VALUES	('Joe', 'Bob', '333 W 3000 S', NULL, 'Salt Lake City', 'UT', '84111', 'US
 		('Sammy', 'Sosa', '200 North Main Street', 'Apt 10', 'Chicago', 'IL', '60007', 'USA', '801-132-3113', NULL, 0, NULL),
 		('Jill', 'Thompson', '444 E 5000 S', NULL, 'Bountiful', 'UT', '84010', 'USA', '801-232-2323', NULL, 0, NULL),
 		('Kieth', 'Cozart', '3000 E 2212 S', NULL, 'Layton', 'UT', '84041', 'USA', '801-634-4244', NULL, 0, NULL),
-		('Anita', 'Proul', '4462 Maybeck Place', 'Unit A', 'Provo', 'UT', '84601', 'USA', '801-957-4769',' Anita@cougarlife.com', 1, 1500); 
+		('Anita', 'Proul', '4462 Maybeck Place', 'Unit A', 'Provo', 'UT', '84601', 'USA', '801-957-4769',' Anita@cougarlife.com', 1, 1500);
+
 
 --Insert Statements for RESERVATION table
 PRINT 'Inserting data into RESERVATION Table'
@@ -240,45 +235,7 @@ VALUES	('3/2/2023', 'R', '1st Time Customer', 3000),
 		('3/11/2023', 'R', 'Regular Customer. 10th tour booked', 3001),
 		('4/13/2023', 'A', '', 3002),
 		('2/23/2023', 'C', '', 3003); 
-
---Insert Statements for BILLINGCATEGORY
-PRINT 'Inserting data into BILLINGCATEGORY Table'
-INSERT INTO BILLINGCATEGORY
-VALUES	('SeatRate', 1),
-		('Drinks', 1),
-		('Food', 1),
-		('Souvenir', 1),
-		('Parking', 0),
-		('Photos', 1),
-		('County Sales Tax', 0);
-
---Insert Statements for BILLING
-PRINT 'Inserting data into BILLING Table'
-INSERT INTO BILLING
-VALUES	('Seat Rate', 60.00, 3, '2/23/2023', 1, 1),
-		('Pepsi 20 oz', 4.00, 5, '2/23/2023', 1, 2),
-		('Cheeseburger', 6.50, 3, '2/23/2023', 1, 3),
-		('Souvenir Pin', 3.00, 1, '2/23/2023', 1, 4),
-		('Parking', 20.00, 1, '2/23/2023', 1, 5),
-		('County Tax', 26.19, 1, '2/23/2023', 1, 7)
-
---Insert Statements for DISCOUNT
-PRINT 'Inserting data into DISCOUNT Table'
-INSERT INTO DISCOUNT
-VALUES	('No Discount (Default)', '2039-12-31', 'Default Discount', 0, 0),
-		('Internet Discount', '2023-12-31', 'Discount for anyone who books tour online', 10, 0),
-		('Hotel Guest Discount', '2023-12-31', 'Discount for anyone who is currently a guest at the hotel', 10, 0),
-		('Multiple Passenger Discount', '2023-12-31', 'Discount for anyone who books more than 4 seats', 0, 50),
-		('TV Commercial Discount', '2023-12-31', 'Discount found on TV, Take $20 off your tour price', 0, 20)
-
---Insert statement for FLIGHTCHARTER
-PRINT 'Inserting data into FLIGHTCHARTER Table'
-INSERT INTO FLIGHTCHARTER
-VALUES	('R', 3, NULL, 1, 1, 1),
-		('R', 2, NULL, 2, 2, 2),
-		('A', 2, '2023/04/29 6:00:00 PM', 3, 3, 3),
-		('C', 4, '2023/04/29 7:00:00 AM', 4, 4,4),
-		('R', 3, NULL, 3, 5, 2)
+GO
 
 --Insert Statements for HELICOPTER
 PRINT 'Inserting data into HELICOPTER Table'
@@ -287,17 +244,6 @@ INSERT INTO HELICOPTER
 		('Bumblebee',	6,  350, 1000),
 		('Thor',		5,  300, 900),
 		('The Bus',		10, 400, 1500)
-
---Insert Statements for ROUTE
-PRINT 'Inserting data into ROUTE Table'
-INSERT INTO ROUTE --Ogden is 2300
-	VALUES
-		(230,	5.5, 'Bear Lake',		'Flight over Logan and to bear lake',				2300), --1265
-		(90,	2.5, 'Great Salt Lake', 'Flight over the Spiral Jetty and Antelope Island', 2300), --225
-		(300,	5.5, 'Uinta Mountains', 'Flight over Wasatch to Uinta',						2300), --1650
-		(180,	4.5, 'Provo',			'Flight over the city skyline to Provo',			2300), --810
-		(50,	2.5, 'Salt Lake City',	'Flight over Salt Lake City',						2300), --125
-		(130,	4.5, 'Park City',		'Flight over the mountains to Park City',			2300)  --585
 
 --Insert Statements for TOURTIME
 PRINT 'Inserting data into TOURTIME Table'
@@ -319,14 +265,65 @@ INSERT INTO TOURTIME
 		('2023/04/29 7:30:00 PM', NULL)
 
 
---Insert Statements for TOUR
+--Insert Statements for ROUTE
+PRINT 'Inserting data into ROUTE Table'
+INSERT INTO ROUTE --Ogden is 2300
+	VALUES
+		(230,	5.5, 'Bear Lake',		'Flight over Logan and to bear lake',				2300), --1265
+		(90,	2.5, 'Great Salt Lake', 'Flight over the Spiral Jetty and Antelope Island', 2300), --225
+		(300,	5.5, 'Uinta Mountains', 'Flight over Wasatch to Uinta',						2300), --1650
+		(180,	4.5, 'Provo',			'Flight over the city skyline to Provo',			2300), --810
+		(50,	2.5, 'Salt Lake City',	'Flight over Salt Lake City',						2300), --125
+		(130,	4.5, 'Park City',		'Flight over the mountains to Park City',			2300)  --585
+
+--Insert Statements for BILLINGCATEGORY
+PRINT 'Inserting data into BILLINGCATEGORY Table'
+INSERT INTO BILLINGCATEGORY
+VALUES	('SeatRate', 1),
+		('Drinks', 1),
+		('Food', 1),
+		('Souvenir', 1),
+		('Parking', 0),
+		('Photos', 1),
+		('County Sales Tax', 0);
+
+--Insert Statements for DISCOUNT
+PRINT 'Inserting data into DISCOUNT Table'
+INSERT INTO DISCOUNT
+VALUES	('No Discount (Default)', '2039-12-31', 'Default Discount', 0, 0),
+		('Internet Discount', '2023-12-31', 'Discount for anyone who books tour online', 10, 0),
+		('Hotel Guest Discount', '2023-12-31', 'Discount for anyone who is currently a guest at the hotel', 10, 0),
+		('Multiple Passenger Discount', '2023-12-31', 'Discount for anyone who books more than 4 seats', 0, 50),
+		('TV Commercial Discount', '2023-12-31', 'Discount found on TV, Take $20 off your tour price', 0, 20)
+
+
 PRINT 'Inserting data into TOUR Table'
 INSERT INTO TOUR
 	VALUES
 		('F', 377.5, 1, 1, 1),
 		('P', 225, 2, 2, 2),
 		('E', 315, 3, 3, 7),
-		('E', 204, 1, 2, 14)
+		('E', 204, 1, 2, 14)	
+
+--Insert statement for FLIGHTCHARTER
+PRINT 'Inserting data into FLIGHTCHARTER Table'
+INSERT INTO FLIGHTCHARTER
+VALUES	('R', 3, NULL, 1, 1, 6000),
+		('R', 2, NULL, 2, 2, 6000),
+		('A', 2, '2023/04/29 6:00:00 PM', 3, 3, 6003),
+		('C', 4, '2023/04/29 7:00:00 AM', 4, 4, 6003),
+		('R', 3, NULL, 3, 5, 6002)
+
+--Insert Statements for BILLING
+PRINT 'Inserting data into BILLING Table'
+INSERT INTO BILLING
+VALUES	('Seat Rate', 60.00, 3, '2/23/2023', 1, 1),
+		('Pepsi 20 oz', 4.00, 5, '2/23/2023', 1, 2),
+		('Cheeseburger', 6.50, 3, '2/23/2023', 1, 3),
+		('Souvenir Pin', 3.00, 1, '2/23/2023', 1, 4),
+		('Parking', 20.00, 1, '2/23/2023', 1, 5),
+		('County Tax', 26.19, 1, '2/23/2023', 1, 7)
+
 
 
 SELECT * FROM CUSTOMER
