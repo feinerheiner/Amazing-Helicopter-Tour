@@ -35,11 +35,11 @@ FILEGROWTH = 25%
 )
 GO
 
-SELECT * FROM OPENQUERY (LOCALSERVER, 'Select HotelID FROM FARMS.dbo.HOTEL') as passthrough
+--SELECT * FROM OPENQUERY (LOCALSERVER, 'Select HotelID FROM FARMS.dbo.HOTEL') as passthrough
 
-SELECT * FROM OPENQUERY (LOCALSERVER, 'Select * FROM FARMS.dbo.BILLING') as passthrough
+--SELECT * FROM OPENQUERY (LOCALSERVER, 'Select * FROM FARMS.dbo.BILLING') as passthrough
 
-SELECT * FROM OPENQUERY (LOCALSERVER, 'Select * FROM FARMS.dbo.GUEST') as passthrough
+--SELECT * FROM OPENQUERY (LOCALSERVER, 'Select * FROM FARMS.dbo.GUEST') as passthrough
 
 
 USE HEINER_RAMAILEH_HELICOPTERS
@@ -325,11 +325,138 @@ VALUES	('Seat Rate', 60.00, 3, '2/23/2023', 1, 1),
 		('County Tax', 26.19, 1, '2/23/2023', 1, 7)
 
 
+--Creating Procedure sp_InsertDiscount
+IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.ROUTINES WHERE SPECIFIC_NAME = 'sp_InsertDiscount')
+	DROP PROCEDURE sp_InsertDiscount;
+GO
 
-SELECT * FROM CUSTOMER
-SELECT * FROM RESERVATION
-SELECT * FROM BILLINGCATEGORY
-SELECT * FROM BILLING
-SELECT * FROM HELICOPTER
+CREATE PROCEDURE sp_InsertDiscount
+@DiscountDescription	varchar(50),
+@DiscountExpiration		date,
+@DiscountRules			varchar(100) = NULL,
+@DiscountPercent		decimal = NULL,
+@DiscountAmount			smallmoney = NULL
+
+
+AS
+	BEGIN
+
+	DECLARE @DiscountPercentString	varchar(10) = @DiscountPercent
+	DECLARE @DiscountAmountString varchar(8) = @DiscountAmount
+
+	DECLARE @ErrMessage  varchar(max)
+BEGIN TRY
+		IF @DiscountPercent is NULL AND @DiscountAmount is NULL
+		BEGIN 
+			SET @ErrMessage = ('Must enter a DiscountPercent or DiscountAmount. Both cannot be empty')
+			RAISERROR (@ErrMessage, -1, -1, @DiscountPercentString, @DiscountAmountString)
+		RETURN -1
+		END
+	END TRY
+	BEGIN CATCH
+	RETURN -1
+	END CATCH
+
+	IF @DiscountPercent IS NULL
+	BEGIN
+		SET @DiscountPercent = 0
+	END
+
+	IF @DiscountAmount IS NULL
+	BEGIN
+		SET @DiscountAmount = 0
+	END
+	
+		INSERT INTO DISCOUNT(DiscountDescription,DiscountExpiration, DiscountRules, DiscountPercent, DiscountAmount)
+		VALUES (@DiscountDescription, @DiscountExpiration, @DiscountRules, @DiscountPercent, @DiscountAmount)
+	
+	END
+GO
+
+-- Showing Discount Table before one is inserted and after.
+PRINT'Showing Discount Table before one is inserted and after.' + char(10)
+
+SELECT * FROM DISCOUNT
+
+EXEC sp_InsertDiscount
+@DiscountDescription = 'May Discount',
+@DiscountExpiration	= '2023-5-31',
+@DiscountRules = 'New Discount For May Only',
+@DiscountAmount = 50
+GO
+
+SELECT * FROM DISCOUNT
+
+-- Showing error being thrown if customer doesnt enter a discount percent or amount
+PRINT'Showing error being thrown if customer doesnt enter a discount percent or amount' + char(10)
+EXEC sp_InsertDiscount
+@DiscountDescription = 'Incorrect Discount',
+@DiscountExpiration	= '2023-7-31',
+@DiscountRules = 'Bad Dscount'
+GO
+
+SELECT * FROM DISCOUNT
+GO
+
+
+
+--Creating Procedure sp_InsertRoute
+IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.ROUTINES WHERE SPECIFIC_NAME = 'sp_InsertRoute')
+	DROP PROCEDURE sp_InsertRoute;
+GO
+
+CREATE PROCEDURE sp_InsertRoute
+@Distance				smallint,
+@RouteRate				smallmoney,
+@RouteName				varchar(30),
+@RouteDescription		varchar(200),
+@HotelID				smallint
+
+AS
+	BEGIN
+
+DECLARE @ErrMessage  varchar(max)
+BEGIN TRY
+		IF @Distance < 1
+		BEGIN 
+			SET @ErrMessage = ('Distance of route cannot be negative or zero')
+			RAISERROR (@ErrMessage, -1, -1, @Distance)
+		RETURN -1
+		END
+	END TRY
+	BEGIN CATCH
+	RETURN -1
+	END CATCH
+
+	INSERT INTO ROUTE(Distance, RouteRate, RouteName, RouteDescription, HotelID)
+	VALUES (@Distance, @RouteRate, @RouteName, @RouteDescription, @HotelID)
+
+END
+GO
+
+-- Showing Route Table before one is inserted and after.
+PRINT 'Showing Route Table before one is inserted and after.' + char(10)
+
 SELECT * FROM ROUTE
-SELECT * FROM TOURTIME
+
+EXEC sp_InsertRoute
+@Distance = 80,
+@RouteRate = 2.50,
+@RouteName = 'Wasatch Front',
+@RouteDescription = 'Flight Across Wasatch Front',
+@HotelID = 2100
+GO
+
+SELECT * FROM ROUTE
+
+-- Showing Error Being Thrown if negative or 0 distance is entered
+PRINT 'Showing Error Being Thrown if negative or 0 distance is entered' + char(10)
+EXEC sp_InsertRoute
+@Distance = -1,
+@RouteRate = 2.50,
+@RouteName = 'Wasatch Front',
+@RouteDescription = 'Flight Across Wasatch Front',
+@HotelID = 2100
+GO
+
+SELECT * FROM ROUTE	
