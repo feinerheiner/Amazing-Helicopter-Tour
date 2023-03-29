@@ -35,13 +35,6 @@ FILEGROWTH = 25%
 )
 GO
 
---SELECT * FROM OPENQUERY (LOCALSERVER, 'Select HotelID FROM FARMS.dbo.HOTEL') as passthrough
-
---SELECT * FROM OPENQUERY (LOCALSERVER, 'Select * FROM FARMS.dbo.BILLING') as passthrough
-
---SELECT * FROM OPENQUERY (LOCALSERVER, 'Select * FROM FARMS.dbo.GUEST') as passthrough
-
-
 USE HEINER_RAMAILEH_HELICOPTERS
 
 CREATE TABLE [BILLING] (
@@ -225,7 +218,7 @@ VALUES	('Joe', 'Bob', '333 W 3000 S', NULL, 'Salt Lake City', 'UT', '84111', 'US
 		('Sammy', 'Sosa', '200 North Main Street', 'Apt 10', 'Chicago', 'IL', '60007', 'USA', '801-132-3113', NULL, 0, NULL),
 		('Jill', 'Thompson', '444 E 5000 S', NULL, 'Bountiful', 'UT', '84010', 'USA', '801-232-2323', NULL, 0, NULL),
 		('Kieth', 'Cozart', '3000 E 2212 S', NULL, 'Layton', 'UT', '84041', 'USA', '801-634-4244', NULL, 0, NULL),
-		('Anita', 'Proul', '4462 Maybeck Place', 'Unit A', 'Provo', 'UT', '84601', 'USA', '801-957-4769',' Anita@cougarlife.com', 1, 1500);
+		('Anita', 'Proul', '4462 Maybeck Place', 'Unit A', 'Provo', 'UT', '84601', 'USA', '801-957-4769','Anita@cougarlife.com', 0, 1500);
 
 
 --Insert Statements for RESERVATION table
@@ -234,7 +227,8 @@ INSERT INTO RESERVATION
 VALUES	('3/2/2023', 'R', '1st Time Customer', 3000),
 		('3/11/2023', 'R', 'Regular Customer. 10th tour booked', 3001),
 		('4/13/2023', 'A', '', 3002),
-		('2/23/2023', 'C', '', 3003); 
+		('2/23/2023', 'C', '', 3003),
+		('3/23/2023', 'R', '',  3004);
 GO
 
 --Insert Statements for HELICOPTER
@@ -312,7 +306,8 @@ VALUES	('R', 3, NULL, 1, 1, 6000),
 		('R', 2, NULL, 2, 2, 6000),
 		('A', 2, '2023/04/29 6:00:00 PM', 3, 3, 6003),
 		('C', 4, '2023/04/29 7:00:00 AM', 4, 4, 6003),
-		('R', 3, NULL, 3, 5, 6002)
+		('R', 3, NULL, 3, 5, 6002),
+		('R', 5, NULL, 2, 1, 6004)
 
 --Insert Statements for BILLING
 PRINT 'Inserting data into BILLING Table'
@@ -324,7 +319,7 @@ VALUES	('Seat Rate', 60.00, 3, '2/23/2023', 1, 1),
 		('Parking', 20.00, 1, '2/23/2023', 1, 5),
 		('County Tax', 26.19, 1, '2/23/2023', 1, 7)
 
-
+-----------------------------------------------------------------------------------------------
 --Creating Procedure sp_InsertDiscount
 IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.ROUTINES WHERE SPECIFIC_NAME = 'sp_InsertDiscount')
 	DROP PROCEDURE sp_InsertDiscount;
@@ -373,8 +368,8 @@ BEGIN TRY
 	END
 GO
 
--- Showing Discount Table before one is inserted and after.
-PRINT'Showing Discount Table before one is inserted and after.' + char(10)
+-- Showing Discount Table before a discount is inserted and after.
+PRINT'Showing Discount Table before a discount is inserted and after.' + char(10)
 
 SELECT * FROM DISCOUNT
 
@@ -399,7 +394,7 @@ SELECT * FROM DISCOUNT
 GO
 
 
-
+-----------------------------------------------------------------------------------------------
 --Creating Procedure sp_InsertRoute
 IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.ROUTINES WHERE SPECIFIC_NAME = 'sp_InsertRoute')
 	DROP PROCEDURE sp_InsertRoute;
@@ -460,3 +455,576 @@ EXEC sp_InsertRoute
 GO
 
 SELECT * FROM ROUTE	
+GO
+
+--------------------------------------------------------------------------------------------
+--Creating Procedure sp_IsHotelGuest
+IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.ROUTINES WHERE SPECIFIC_NAME = 'sp_IsHotelGuest')
+	DROP PROCEDURE sp_isHotelGuest
+GO
+
+CREATE PROCEDURE sp_IsHotelGuest
+@CustFirst				varchar(20),
+@CustLast				varchar(20),
+@Date					smalldatetime
+
+AS
+	BEGIN
+
+DECLARE @ErrMessage  varchar(max)
+DECLARE @isHotelGuest tinyint = 0
+DECLARE @TSQL Nvarchar(300) 
+DECLARE @VAR Nvarchar(20)
+DECLARE @NameTBL TABLE (Name VARCHAR(20))
+DECLARE @IDFirst TABLE (GuestID smallint)
+DECLARE @IDLast TABLE (GuestID smallint)
+DECLARE @CheckinDateTBL TABLE (ID smallint NOT NULL IDENTITY, CheckinDate smalldatetime)
+DECLARE @NightsTBL TABLE (ID smallint NOT NULL IDENTITY, Nights tinyint)
+DECLARE @firstName varchar(20)
+DECLARE @lastName varchar(20)
+
+
+--checking to see if FirstName matches any in Guest Table
+SET @TSQL = N'SELECT * FROM OPENQUERY(LOCALSERVER,''Select GuestFirst FROM FARMS.dbo.Guest where GuestFirst =''''' + @CustFirst + ''''''')'
+INSERT INTO @NameTBL EXEC sp_executesql @TSQL
+
+SELECT @firstName = m.Name
+FROM @NameTBL m
+
+IF(@firstName = @CustFirst)
+BEGIN
+	SET @isHotelGuest = 1
+END
+
+IF @isHotelGuest = 1
+BEGIN
+	SET @TSQL = N'SELECT * FROM OPENQUERY(LOCALSERVER,''Select GuestLast FROM FARMS.dbo.Guest where GuestLast =''''' + @CustLast + ''''''')'
+	DELETE FROM @NameTBL
+	
+	INSERT INTO @NameTBL EXEC sp_executesql @TSQL
+
+	SELECT @lastName = m.Name
+	FROM @NameTBL m
+
+	IF(@lastName = @CustLast)
+	BEGIN
+		SET @isHotelGuest = 1
+	END
+END
+
+IF @isHotelGuest = 1
+BEGIN
+	DECLARE @CustomerID smallint
+	DECLARE @GuestIDFirst smallint
+	DECLARE @GuestIDLast smallint
+	
+
+	SET @TSQL = N'SELECT * FROM OPENQUERY(LOCALSERVER,''Select GuestID FROM FARMS.dbo.Guest where GuestFirst =''''' + @firstName + ''''''' )'
+	--DELETE FROM @NameTBL
+	INSERT INTO @IDFirst EXEC sp_executesql @TSQL
+
+	SELECT @GuestIDFirst = m.GuestID
+	FROM @IDFirst m
+	
+	SET @TSQL = N'SELECT * FROM OPENQUERY(LOCALSERVER,''Select GuestID FROM FARMS.dbo.Guest where GuestLast =''''' + @lastName + ''''''' )'
+	--DELETE FROM @NameTBL
+	INSERT INTO @IDLast EXEC sp_executesql @TSQL
+
+	SELECT @GuestIDLast = m.GuestID
+	FROM @IDLast m
+
+	IF @GuestIDFirst = @GuestIDLast  
+	BEGIN
+		SET @isHotelGuest = 1
+	END
+	ELSE
+	BEGIN
+		SET @isHotelGuest = 0
+	END
+END
+
+IF @isHotelGuest = 1
+BEGIN
+	DECLARE @CheckinDate smalldatetime
+	DECLARE @Nightcount tinyint
+	DECLARE @IDFirstN nvarchar(4)
+	DECLARE @NightsN nvarchar (2)
+	DECLARE @ExpectedCheckOutDate smalldatetime
+	DECLARE @DateDifference smallint
+	DECLARE @CheckOutDateTBL TABLE (CheckInDate smalldatetime, CheckOutDate smalldatetime)
+
+	SET @IDFirstN = CONVERT(Nvarchar(4), @GuestIDFirst)
+
+	SET @TSQL = N'SELECT * FROM OPENQUERY(LOCALSERVER,''Select CheckInDate FROM FARMS.dbo.FOLIO where GuestID =''''' + @IDFirstN + ''''''' )'
+	--DELETE FROM @NameTBL
+	INSERT INTO @CheckinDateTBL EXEC sp_executesql @TSQL
+
+	SELECT @CheckinDate = m.CheckinDate
+	FROM @CheckinDateTBL m
+	
+	SET @TSQL = N'SELECT * FROM OPENQUERY(LOCALSERVER,''Select Nights FROM FARMS.dbo.FOLIO where GuestID =''''' +  @IDFirstN + ''''''' )'
+	--DELETE FROM @NameTBL
+	INSERT INTO @NightsTBL EXEC sp_executesql @TSQL
+
+	SELECT @Nightcount = m.Nights
+	FROM @NightsTBL m
+
+	DECLARE @idColumn int
+	DECLARE @newDate smalldatetime
+	DECLARE @CNights tinyint
+	DECLARE @CDate smalldatetime
+	SELECT @idColumn = min(ID) from @CheckinDateTBL
+
+	WHILE @idColumn is not null
+	BEGIN	
+			SELECT @CNights = Nights from @NightsTBL where ID = @idColumn
+			
+			SELECT @CDate = CheckinDate from @CheckinDateTBL where ID = @idColumn
+			
+			SET @newDate = DATEADD(DAY, @CNights, @CDate)
+
+			INSERT INTO @CheckOUTDateTBL VALUES (@cDate,@newDate)
+			select @idColumn = min( ID ) from @CheckinDateTBL where ID > @idColumn
+	END
+
+	DECLARE @isHotelGuestcount tinyint
+	SET @isHotelGuestcount = (SELECT COUNT (CheckInDate) FROM @CheckOutDateTBL where CheckOutDate >= @Date AND @DATE >= CheckInDate)
+
+	IF @isHotelGuest > 0
+	BEGIN
+		SELECT @CustomerID = m.CustomerID
+		FROM CUSTOMER m
+		WHERE CustFirst = @firstName AND @CustLast = @lastName
+
+		UPDATE CUSTOMER
+		SET IsHotelGuest = 1, GuestID = @GuestIDLast
+		WHERE CustFirst = @firstName AND CustLast = @lastName AND @CustomerID = CustomerID;
+	END
+END
+
+END
+GO
+
+--Showing guest Anita Proul isHotelGuest status being changed from 0 to 1
+PRINT'--Showing guest Anita Proul isHotelGuest status being changed from 0 to 1' + CHAR(10)
+SELECT * FROM CUSTOMER
+
+EXEC sp_IsHotelGuest
+@CustFirst = 'Anita',
+@CustLast = 'Proul',
+@Date = N'2023/03/17 7:00:00 AM'
+GO
+
+SELECT * FROM CUSTOMER
+GO
+
+--Building dbo.CalculateRouteRate
+PRINT 'Building dbo.CalculateRouteRate'
+IF OBJECT_ID(N'dbo.CalculateRouteRate', N'FN') IS NOT NULL
+	DROP FUNCTION CalculateRouteRate
+GO
+
+CREATE FUNCTION dbo.CalculateRouteRate(@Distance smallint)
+RETURNS smallmoney
+AS
+BEGIN
+	DECLARE
+		@RetVal smallmoney
+
+	IF (@Distance > 200)
+		BEGIN
+			SET @RetVal = 5.50
+		END
+	ELSE IF (@Distance > 100)
+		BEGIN
+			SET @RetVal =  4.50
+		END
+	ELSE 
+		BEGIN
+			SET @RetVal =  2.50
+		END
+		
+	RETURN @RetVal
+END
+GO
+
+PRINT 'RoutRates are $2.50, $4.50, and $5.50. per mile'
+PRINT 'A tour less then 100 miles will have a $' + CONVERT(varchar(6), dbo.CalculateRouteRate(50)) + ' rate.'
+PRINT 'A tour between 100 and 200 miles will have a $' + CONVERT(varchar(6), dbo.CalculateRouteRate(101)) + ' rate.'
+PRINT 'A tour greater than 200 miles will have a $' + CONVERT(varchar(6), dbo.CalculateRouteRate(201)) + ' rate.'
+
+
+
+PRINT 'Building dbo.CalculateSeatRate'
+IF OBJECT_ID(N'dbo.CalculateSeatRate', N'FN') IS NOT NULL
+	DROP FUNCTION CalculateSeatRate
+GO
+
+CREATE FUNCTION dbo.CalculateSeatRate(@HelicopterID smallint, @RouteID smallint)
+RETURNS smallmoney
+AS
+BEGIN
+	DECLARE
+		@RetVal			smallmoney,
+		@Seats			smallint,
+		@HelicopterRate smallmoney,
+		@RoutRate		smallmoney,
+		@RouteDistance	smallint
+
+	SELECT 
+		@Seats = h.Capacity,
+		@HelicopterRate = h.HelicopterRate 
+	FROM HELICOPTER h
+	WHERE h.HelicopterID = @HelicopterID
+
+	SELECT 
+		@RoutRate = r.RouteRate, 
+		@RouteDistance = r.Distance
+	FROM ROUTE r
+	WHERE r.RouteID = @RouteID
+
+	SELECT @RetVal = ((@RouteDistance * @RoutRate) + @HelicopterRate) / @Seats
+
+	RETURN @RetVal
+END
+GO
+
+SELECT * FROM HELICOPTER
+
+SELECT * FROM ROUTE
+
+PRINT 'This is to test dbo.CalculateSeatRate'
+PRINT 'IF we make a tour using Bumblebee and fly the Great Salt Lake route, the Seat Rate is $' + CONVERT(varchar(6),dbo.CalculateSeatRate(1, 2))
+PRINT 'IF we make a tour using Thor and fly the Salt Lake City route, the Seat Rate is $' + CONVERT(varchar(6),dbo.CalculateSeatRate(2, 5))
+
+PRINT''
+PRINT 'Building dbo.ProduceBill'
+
+IF OBJECT_ID(N'dbo.ProduceBill', N'FN') IS NOT NULL
+	DROP FUNCTION ProduceBill
+GO
+
+CREATE FUNCTION dbo.ProduceBill(@FlightCharterID smallint)
+RETURNS @Ret TABLE(lineItem Varchar(Max), lineQuantity varchar(max), lineData varchar(max))
+AS
+BEGIN
+	INSERT INTO @Ret
+	VALUES
+		(
+			'Name:',
+			'',
+			(SELECT CONCAT(CustFirst, ' ', CustLast) AS lineData
+			FROM CUSTOMER c
+			JOIN RESERVATION r on c.CustomerID = r.CustomerID
+			JOIN FLIGHTCHARTER f on r.ReservationID = f.ReservationID
+			WHERE f.FlightCharterID = @FlightCharterID)
+		),
+		(
+			'Address:',
+			'',
+			(SELECT c.CustAddress1 AS lineData
+			FROM CUSTOMER c
+			JOIN RESERVATION r on c.CustomerID = r.CustomerID
+			JOIN FLIGHTCHARTER f on r.ReservationID = f.ReservationID
+			WHERE f.FlightCharterID = @FlightCharterID)
+		),
+		(
+			'',
+			'',
+			(SELECT CONCAT(c.CustCity, ' ', c.CustState, ' ', c.CustPostalCode) AS lineData
+			FROM CUSTOMER c
+			JOIN RESERVATION r on c.CustomerID = r.CustomerID
+			JOIN FLIGHTCHARTER f on r.ReservationID = f.ReservationID
+			WHERE f.FlightCharterID = @FlightCharterID)
+		),
+		(
+			'Route:',
+			'',
+			(SELECT r.RouteName AS lineData
+			FROM ROUTE r
+			JOIN TOUR t on r.RouteID = t.RouteID 
+			JOIN FLIGHTCHARTER f on t.TourID = f.TourID
+			WHERE f.FlightCharterID = @FlightCharterID)
+		),
+		(
+			'Helicopter:',
+			'',
+			(SELECT h.HelicopterName AS lineData
+			FROM HELICOPTER h
+			JOIN TOUR t on h.HelicopterID = t.HelicopterID 
+			JOIN FLIGHTCHARTER f on t.TourID = f.TourID
+			WHERE f.FlightCharterID = @FlightCharterID)
+		),
+		(
+			'Charter Time:',
+			'',
+			CONVERT(varchar(30),(SELECT tt.TourTimeStart AS lineData
+			FROM TOURTIME tt
+			JOIN TOUR t on tt.TourTimeID = t.TourTimeID 
+			JOIN FLIGHTCHARTER f on t.TourID = f.TourID
+			WHERE f.FlightCharterID = @FlightCharterID))
+		)
+
+	DECLARE
+		@BillingDescription varchar(30),
+		@BillingItemQty		tinyint,
+		@TotalItem			smallint,
+		@BillingAmount		smallmoney,
+		@BillingItemTotal	smallmoney,
+		@BillingTotal		smallmoney
+
+	SET @BillingAmount = 0
+	SET @BillingItemTotal = 0
+	SET @BillingTotal = 0
+	SET @TotalItem = 0
+
+	DECLARE cur_billingItems CURSOR 
+		FOR SELECT 
+			BillingDescription,
+			BillingItemQty,
+			BillingAmount
+		FROM BILLING 
+		WHERE FlightCharterID = @FlightCharterID
+
+	OPEN cur_billingItems
+	FETCH NEXT FROM cur_billingItems INTO @BillingDescription, @BillingItemQty, @BillingAmount
+	WHILE @@FETCH_STATUS = 0
+	BEGIN
+		INSERT INTO @Ret
+			VALUES
+				(@BillingDescription, @BillingItemQty, CONCAT('$', @BillingAmount))
+		SET @BillingItemTotal = @BillingItemQty * @BillingAmount
+		SET @BillingTotal += @BillingItemTotal
+		SET @TotalItem += @BillingItemQty
+		FETCH NEXT FROM cur_billingItems INTO @BillingDescription, @BillingItemQty, @BillingAmount
+	END
+	CLOSE cur_billingItems
+	DEALLOCATE cur_billingItems
+
+	INSERT INTO @Ret
+		VALUES
+			('TOTALS:', @TotalItem, CONCAT('$',@BillingTotal))
+	
+	RETURN
+END
+GO
+
+PRINT 'Testing dbo.ProduceBill'
+SELECT * FROM dbo.ProduceBill(1)
+GO
+
+
+--------------------------------------------------------------
+--Creating Trigger tr_FlightCharter
+CREATE TRIGGER tr_FlightCharter ON FLIGHTCHARTER AFTER UPDATE
+AS	
+	IF UPDATE([Status])
+    BEGIN
+        DECLARE @FlightCharterID smallint
+		DECLARE @Status char(1)
+		DECLARE @GuestCount tinyint
+		DECLARE @CustomerArrivalTime smalldatetime
+		DECLARE @TourID smallint
+		DECLARE @DiscountID smallint
+		DECLARE @ReservationID smallint
+
+		DECLARE @TourTimeID smallint
+		DECLARE @TourTimeStart smalldatetime
+		DECLARE @CancelDate smalldatetime = '2023/04/27 6:45:00 PM'
+		DECLARE @CancelDateDifference smallint
+		DECLARE @ArrivalDateDifference smallint
+		DECLARE @SeatRate smallmoney
+
+		DECLARE @IsHotelGuest bit
+		DECLARE @CustomerID smallint
+
+		SELECT 
+			@FlightCharterID = i.FlightCharterID,
+			@Status = i.Status,
+			@GuestCount = i.GuestCount,
+			@CustomerArrivalTime = i.CustomerArrivalTime, 
+			@TourID = i.TourID,
+			@DiscountID = i.DiscountID,
+			@ReservationID = i.ReservationID
+		FROM INSERTED i
+
+		IF @Status = 'C'
+		BEGIN
+
+		--getting seat rate and TourTimeStart to compare
+		SELECT @SeatRate = Seatrate FROM TOUR WHERE @TourID = TourID
+		SELECT @TourTimeID = TourTimeID FROM TOUR WHERE @TourID = TourID
+		SELECT @TourTimeStart = TourTimeStart FROM TOURTIME WHERE @TourTimeID = TourTimeID
+
+		--getting ISHotelGuest status to see if 10% discount should be applied
+		SELECT @CustomerID = CustomerID FROM RESERVATION WHERE @ReservationID = ReservationID
+		SELECT @IsHotelGuest = isHotelGuest FROM CUSTOMER WHERE @CustomerID = CustomerID
+
+		--PRINT CAST(@tourtimestart AS VARCHAR(30))+ 'tourstart'
+		--PRINT CAST(@canceldate AS VARCHAR(30))+ 'cancel date'
+
+		SET @CancelDateDifference = DATEDIFF(HOUR, @CancelDate, @TourTimeStart)
+		--PRINT CAST(@CancelDateDifference AS VARCHAR(30))+ 'date difference'
+
+		IF @CancelDate is NULL
+			BEGIN
+				INSERT INTO BILLING (BillingDescription, BillingAmount, BillingItemQty, BillingItemDate, FlightCharterID, BillingCategoryID)
+				VALUES ('Seat Rate', @SeatRate, @GuestCount, GETDATE(), @FlightCharterID, 1)
+
+				IF @IsHotelGuest = 1
+				BEGIN
+					UPDATE FLIGHTCHARTER
+					SET DiscountID = 3
+					WHERE @FlightCharterID = FlightCharterID
+				END
+
+			END
+		
+		IF @CancelDateDifference >= 24 AND @CancelDateDifference < 48
+			BEGIN
+				INSERT INTO BILLING (BillingDescription, BillingAmount, BillingItemQty, BillingItemDate, FlightCharterID, BillingCategoryID)
+				VALUES ('Cancel Fee', @SeatRate * .5, @GuestCount, GETDATE(), @FlightCharterID, 1)
+			END
+		
+		IF @CancelDateDifference < 24
+			BEGIN
+				INSERT INTO BILLING (BillingDescription, BillingAmount, BillingItemQty, BillingItemDate, FlightCharterID, BillingCategoryID)
+				VALUES ('Cancel Fee', @SeatRate * .8, @GuestCount, GETDATE(), @FlightCharterID, 1)
+			END
+
+
+		SET @ArrivalDateDifference = DATEDIFF(MINUTE, @CustomerArrivalTime, @TourTimeStart)
+		--PRINT CAST(@ArrivalDateDifference AS VARCHAR(30))+ 'Arrival date difference'
+
+		IF @ArrivalDateDifference < 30
+			BEGIN
+				INSERT INTO BILLING (BillingDescription, BillingAmount, BillingItemQty, BillingItemDate, FlightCharterID, BillingCategoryID)
+				VALUES ('Late Fee', @SeatRate * .1, @GuestCount, GETDATE(), @FlightCharterID, 1)
+			END
+	END
+END
+GO
+
+--Showing results of a FLIGHTCHARTER whose status is changed to ''C'' and ends up canceling 24 hours before.
+PRINT'Showing results of a FLIGHTCHARTER whose status is changed to ''C'' and ends up canceling 24 hours before.' + char(10)
+SELECT * FROM BILLING
+SELECT * FROM FLIGHTCHARTER
+GO
+
+UPDATE FLIGHTCHARTER 
+SET Status = 'C'
+WHERE FlightCharterID = 2
+GO
+
+SELECT * FROM BILLING
+SELECT * FROM FLIGHTCHARTER
+GO
+
+--altering Trigger to show a customer with no canceldate and that shows up to the tour 15 minutes before it starts assessing a late fee. Also shows
+-- DiscountID being updated from 1 to 3 due to being a hotelguest
+ALTER TRIGGER tr_FlightCharter ON FLIGHTCHARTER AFTER UPDATE
+AS	
+	IF UPDATE([Status])
+    BEGIN
+        DECLARE @FlightCharterID smallint
+		DECLARE @Status char(1)
+		DECLARE @GuestCount tinyint
+		DECLARE @CustomerArrivalTime smalldatetime
+		DECLARE @TourID smallint
+		DECLARE @DiscountID smallint
+		DECLARE @ReservationID smallint
+
+		DECLARE @TourTimeID smallint
+		DECLARE @TourTimeStart smalldatetime
+		DECLARE @CancelDate smalldatetime = NULL
+		DECLARE @CancelDateDifference smallint
+		DECLARE @ArrivalDateDifference smallint
+		DECLARE @SeatRate smallmoney
+
+		DECLARE @IsHotelGuest bit
+		DECLARE @CustomerID smallint
+
+		SELECT 
+			@FlightCharterID = i.FlightCharterID,
+			@Status = i.Status,
+			@GuestCount = i.GuestCount,
+			@CustomerArrivalTime = i.CustomerArrivalTime, 
+			@TourID = i.TourID,
+			@DiscountID = i.DiscountID,
+			@ReservationID = i.ReservationID
+		FROM INSERTED i
+
+		IF @Status = 'C'
+		BEGIN
+
+		--getting seat rate and TourTimeStart to compare
+		SELECT @SeatRate = Seatrate FROM TOUR WHERE @TourID = TourID
+		SELECT @TourTimeID = TourTimeID FROM TOUR WHERE @TourID = TourID
+		SELECT @TourTimeStart = TourTimeStart FROM TOURTIME WHERE @TourTimeID = TourTimeID
+
+		--getting ISHotelGuest status to see if 10% discount should be applied
+		SELECT @CustomerID = CustomerID FROM RESERVATION WHERE @ReservationID = ReservationID
+		SELECT @IsHotelGuest = isHotelGuest FROM CUSTOMER WHERE @CustomerID = CustomerID
+
+		--PRINT CAST(@tourtimestart AS VARCHAR(30))+ 'tourstart'
+		--PRINT CAST(@canceldate AS VARCHAR(30))+ 'cancel date'
+
+		SET @CancelDateDifference = DATEDIFF(HOUR, @CancelDate, @TourTimeStart)
+		--PRINT CAST(@CancelDateDifference AS VARCHAR(30))+ 'date difference'
+
+		IF @CancelDate is NULL
+			BEGIN
+				INSERT INTO BILLING (BillingDescription, BillingAmount, BillingItemQty, BillingItemDate, FlightCharterID, BillingCategoryID)
+				VALUES ('Seat Rate', @SeatRate, @GuestCount, GETDATE(), @FlightCharterID, 1)
+
+				IF @IsHotelGuest = 1
+				BEGIN
+					UPDATE FLIGHTCHARTER
+					SET DiscountID = 3
+					WHERE @FlightCharterID = FlightCharterID
+				END
+
+			END
+		
+		IF @CancelDateDifference >= 24 AND @CancelDateDifference < 48
+			BEGIN
+				INSERT INTO BILLING (BillingDescription, BillingAmount, BillingItemQty, BillingItemDate, FlightCharterID, BillingCategoryID)
+				VALUES ('Cancel Fee', @SeatRate * .5, @GuestCount, GETDATE(), @FlightCharterID, 1)
+			END
+		
+		IF @CancelDateDifference < 24
+			BEGIN
+				INSERT INTO BILLING (BillingDescription, BillingAmount, BillingItemQty, BillingItemDate, FlightCharterID, BillingCategoryID)
+				VALUES ('Cancel Fee', @SeatRate * .8, @GuestCount, GETDATE(), @FlightCharterID, 1)
+			END
+
+
+		SET @ArrivalDateDifference = DATEDIFF(MINUTE, @CustomerArrivalTime, @TourTimeStart)
+		--PRINT CAST(@ArrivalDateDifference AS VARCHAR(30))+ 'Arrival date difference'
+
+		IF @ArrivalDateDifference < 30
+			BEGIN
+				INSERT INTO BILLING (BillingDescription, BillingAmount, BillingItemQty, BillingItemDate, FlightCharterID, BillingCategoryID)
+				VALUES ('Late Fee', @SeatRate * .1, @GuestCount, GETDATE(), @FlightCharterID, 1)
+			END
+	END
+END
+GO
+
+--Showing altered trigger to show a customer with no canceldate and that shows up to the tour 15 minutes before it starts assessing a late fee
+PRINT'Showing altered trigger to show a customer with no canceldate and that shows up to the tour 15 minutes before it starts assessing a late fee' + char(10)
+PRINT'Also shows DiscountID being updated from 1 to 3 due to customer being a HotelGuest' + char(10)
+UPDATE FLIGHTCHARTER  
+SET CustomerArrivalTime = '2023/04/28 8:45:00 AM'
+WHERE FlightCharterID = 6
+GO
+
+UPDATE FLIGHTCHARTER 
+SET Status = 'C'
+WHERE FlightCharterID = 6
+GO
+
+SELECT * FROM BILLING
+SELECT * FROM FLIGHTCHARTER
+
+GO
