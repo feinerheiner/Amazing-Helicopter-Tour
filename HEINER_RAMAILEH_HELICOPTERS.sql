@@ -2,7 +2,6 @@
 --Richard Heiner, Rashad Ramaileh
 --3/14/2023
 
-
 USE MASTER
 
 GO
@@ -368,32 +367,6 @@ BEGIN TRY
 	END
 GO
 
--- Showing Discount Table before a discount is inserted and after.
-PRINT'Showing Discount Table before a discount is inserted and after.' + char(10)
-
-SELECT * FROM DISCOUNT
-
-EXEC sp_InsertDiscount
-@DiscountDescription = 'May Discount',
-@DiscountExpiration	= '2023-5-31',
-@DiscountRules = 'New Discount For May Only',
-@DiscountAmount = 50
-GO
-
-SELECT * FROM DISCOUNT
-
--- Showing error being thrown if customer doesnt enter a discount percent or amount
-PRINT'Showing error being thrown if customer doesnt enter a discount percent or amount' + char(10)
-EXEC sp_InsertDiscount
-@DiscountDescription = 'Incorrect Discount',
-@DiscountExpiration	= '2023-7-31',
-@DiscountRules = 'Bad Dscount'
-GO
-
-SELECT * FROM DISCOUNT
-GO
-
-
 -----------------------------------------------------------------------------------------------
 --Creating Procedure sp_InsertRoute
 IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.ROUTINES WHERE SPECIFIC_NAME = 'sp_InsertRoute')
@@ -427,34 +400,6 @@ BEGIN TRY
 	VALUES (@Distance, @RouteRate, @RouteName, @RouteDescription, @HotelID)
 
 END
-GO
-
--- Showing Route Table before one is inserted and after.
-PRINT 'Showing Route Table before one is inserted and after.' + char(10)
-
-SELECT * FROM ROUTE
-
-EXEC sp_InsertRoute
-@Distance = 80,
-@RouteRate = 2.50,
-@RouteName = 'Wasatch Front',
-@RouteDescription = 'Flight Across Wasatch Front',
-@HotelID = 2100
-GO
-
-SELECT * FROM ROUTE
-
--- Showing Error Being Thrown if negative or 0 distance is entered
-PRINT 'Showing Error Being Thrown if negative or 0 distance is entered' + char(10)
-EXEC sp_InsertRoute
-@Distance = -1,
-@RouteRate = 2.50,
-@RouteName = 'Wasatch Front',
-@RouteDescription = 'Flight Across Wasatch Front',
-@HotelID = 2100
-GO
-
-SELECT * FROM ROUTE	
 GO
 
 --------------------------------------------------------------------------------------------
@@ -605,18 +550,6 @@ END
 END
 GO
 
---Showing guest Anita Proul isHotelGuest status being changed from 0 to 1
-PRINT'--Showing guest Anita Proul isHotelGuest status being changed from 0 to 1' + CHAR(10)
-SELECT * FROM CUSTOMER
-
-EXEC sp_IsHotelGuest
-@CustFirst = 'Anita',
-@CustLast = 'Proul',
-@Date = N'2023/03/17 7:00:00 AM'
-GO
-
-SELECT * FROM CUSTOMER
-GO
 
 --Building dbo.CalculateRouteRate
 PRINT 'Building dbo.CalculateRouteRate'
@@ -647,13 +580,6 @@ BEGIN
 	RETURN @RetVal
 END
 GO
-
-PRINT 'RoutRates are $2.50, $4.50, and $5.50. per mile'
-PRINT 'A tour less then 100 miles will have a $' + CONVERT(varchar(6), dbo.CalculateRouteRate(50)) + ' rate.'
-PRINT 'A tour between 100 and 200 miles will have a $' + CONVERT(varchar(6), dbo.CalculateRouteRate(101)) + ' rate.'
-PRINT 'A tour greater than 200 miles will have a $' + CONVERT(varchar(6), dbo.CalculateRouteRate(201)) + ' rate.'
-
-
 
 PRINT 'Building dbo.CalculateSeatRate'
 IF OBJECT_ID(N'dbo.CalculateSeatRate', N'FN') IS NOT NULL
@@ -689,14 +615,7 @@ BEGIN
 END
 GO
 
-SELECT * FROM HELICOPTER
-
-SELECT * FROM ROUTE
-
-PRINT 'This is to test dbo.CalculateSeatRate'
-PRINT 'IF we make a tour using Bumblebee and fly the Great Salt Lake route, the Seat Rate is $' + CONVERT(varchar(6),dbo.CalculateSeatRate(1, 2))
-PRINT 'IF we make a tour using Thor and fly the Salt Lake City route, the Seat Rate is $' + CONVERT(varchar(6),dbo.CalculateSeatRate(2, 5))
-
+-----------------------------------------------------------------------------------------------------------
 PRINT''
 PRINT 'Building dbo.ProduceBill'
 
@@ -705,7 +624,7 @@ IF OBJECT_ID(N'dbo.ProduceBill', N'FN') IS NOT NULL
 GO
 
 CREATE FUNCTION dbo.ProduceBill(@FlightCharterID smallint)
-RETURNS @Ret TABLE(lineItem Varchar(Max), lineQuantity varchar(max), lineData varchar(max))
+RETURNS @Ret TABLE(Description Varchar(20),  Quantity varchar(3), Information varchar(35))
 AS
 BEGIN
 	INSERT INTO @Ret
@@ -809,10 +728,6 @@ BEGIN
 END
 GO
 
-PRINT 'Testing dbo.ProduceBill'
-SELECT * FROM dbo.ProduceBill(1)
-GO
-
 
 --------------------------------------------------------------
 --Creating Trigger tr_FlightCharter
@@ -860,11 +775,7 @@ AS
 		SELECT @CustomerID = CustomerID FROM RESERVATION WHERE @ReservationID = ReservationID
 		SELECT @IsHotelGuest = isHotelGuest FROM CUSTOMER WHERE @CustomerID = CustomerID
 
-		--PRINT CAST(@tourtimestart AS VARCHAR(30))+ 'tourstart'
-		--PRINT CAST(@canceldate AS VARCHAR(30))+ 'cancel date'
-
 		SET @CancelDateDifference = DATEDIFF(HOUR, @CancelDate, @TourTimeStart)
-		--PRINT CAST(@CancelDateDifference AS VARCHAR(30))+ 'date difference'
 
 		IF @CancelDate is NULL
 			BEGIN
@@ -904,6 +815,304 @@ AS
 	END
 END
 GO
+
+CREATE TRIGGER tr_UpdateRouteRate ON ROUTE AFTER INSERT, UPDATE
+AS	
+	DECLARE @RouteID smallint
+	DECLARE @Distance smallint
+	DECLARE @RouteRate smallmoney
+	DECLARE @RouteName varchar(30)
+	DECLARE @RouteDescription varchar(200)
+	DECLARE @HotelID smallint
+	IF UPDATE([DISTANCE])
+	BEGIN
+
+	SELECT 
+		@RouteID = i.RouteID,
+		@Distance = i.Distance
+	FROM INSERTED i
+       
+	IF @Distance > 0 AND @Distance <= 100
+	BEGIN
+		SET @RouteRate = dbo.CalculateRouteRate(@Distance)
+	END
+	IF @Distance > 100 AND @Distance <= 200
+	BEGIN
+		SET @RouteRate = dbo.CalculateRouteRate(@Distance)
+	END
+	IF @Distance > 200
+	BEGIN
+		SET @RouteRate = dbo.CalculateRouteRate(@Distance)
+	END
+
+	UPDATE ROUTE
+	SET RouteRate = @RouteRate
+	WHERE RouteID = @RouteID
+
+
+END
+GO
+
+----------------------------------------------------
+--CREATING tr_GenerateBill
+PRINT 'CREATING tr_GenerateBill' + char(10)
+GO
+
+CREATE TRIGGER tr_GenerateBill
+	ON BILLING
+	AFTER INSERT
+	AS
+	PRINT 'tr_GenerateBill has been triggered'
+	DECLARE
+		@BCID smallint,
+		@FCID smallint,
+		@Name varchar(60)
+
+	SET @BCID = (SELECT BillingCategoryID FROM inserted)
+	SET @FCID = (SELECT FlightCharterID FROM inserted)
+	SELECT @Name = CONCAT(c.CustFirst, ' ', c.CustLast)
+		FROM CUSTOMER c
+		JOIN RESERVATION r ON r.CustomerID = c.CustomerID
+		JOIN FLIGHTCHARTER f ON f.ReservationID = r.ReservationID
+		WHERE f.FlightCharterID = @FCID
+
+	PRINT '@BCID is ' + CONVERT(varchar(3), @BCID)
+	PRINT '@FCID is ' + CONVERT(varchar(3), @FCID)
+	PRINT 'NAME is ' + @Name
+	IF @BCID = 1
+		BEGIN
+		PRINT 'Bill is being produced for ' + @Name
+		SELECT * FROM dbo.ProduceBill(@FCID)
+		END
+GO
+
+--------------------------------------------------------------------
+CREATE TRIGGER tr_UpdateSeatRate
+	ON TOUR
+	INSTEAD OF INSERT
+	AS
+	PRINT 'tr_UpdateSeatRate has been triggered'
+	
+	DECLARE
+		--@TourID			smallint	= (SELECT TourID FROM inserted),
+		@CapacityStatus	char(1)		= (SELECT CapacityStatus FROM inserted),
+		@SeatRate		smallmoney,
+		@HelicopterID	smallint	= (SELECT HelicopterID FROM inserted),
+		@RouteID		smallint	= (SELECT RouteID FROM inserted),
+		@TourTimeID		smallint	= (SELECT TourTimeID FROM inserted)
+
+	SELECT @SeatRate = dbo.CalculateSeatRate(@HelicopterID, @RouteID)
+
+	INSERT INTO TOUR(CapacityStatus, SeatRate, HelicopterID, RouteID, TourTimeID)
+		VALUES(@CapacityStatus, @SeatRate, @HelicopterID, @RouteID, @TourTimeID)
+GO
+
+
+
+-------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------
+
+--Showing stored procedure sp_IsHotelGuest
+PRINT'Showing stored procedure sp_IsHotelGuest' + CHAR(10)
+
+--Showing guest Anita Proul isHotelGuest status being changed from 0 to 1
+PRINT'Showing guest Anita Proul isHotelGuest status being changed from 0 to 1 since she is a Hotel Guest' + CHAR(10)
+SELECT * FROM CUSTOMER
+
+EXEC sp_IsHotelGuest
+@CustFirst = 'Anita',
+@CustLast = 'Proul',
+@Date = N'2023/03/17 7:00:00 AM'
+GO
+
+SELECT * FROM CUSTOMER
+GO
+
+--Showing guest Joe Bob isHotelGuest status being unchanged due to not being hotel guest
+PRINT'Showing guest Joe Bob isHotelGuest status being unchanged due to not being hotel guest'
+
+EXEC sp_IsHotelGuest
+@CustFirst = 'Joe',
+@CustLast = 'Bob',
+@Date = N'2023/03/17 7:00:00 AM'
+GO
+
+SELECT * FROM CUSTOMER
+GO
+
+-------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------
+
+-- Showing Stored procedure for sp_InsertDiscount
+PRINT 'Showing Stored procedure for sp_InsertDiscount' + CHAR(10)
+-- Showing Discount Table before a discount is inserted and after.
+PRINT'Showing Discount Table before a discount is inserted and after.' + char(10)
+
+SELECT * FROM DISCOUNT
+
+EXEC sp_InsertDiscount
+@DiscountDescription = 'May Discount',
+@DiscountExpiration	= '2023-5-31',
+@DiscountRules = 'New Discount For May Only',
+@DiscountAmount = 50
+GO
+
+SELECT * FROM DISCOUNT
+
+-- Showing error being thrown if customer doesnt enter a discount percent or amount
+PRINT'Showing error being thrown if customer doesnt enter a discount percent or amount' + char(10)
+EXEC sp_InsertDiscount
+@DiscountDescription = 'Incorrect Discount',
+@DiscountExpiration	= '2023-7-31',
+@DiscountRules = 'Bad Dscount'
+GO
+
+SELECT * FROM DISCOUNT
+GO
+
+-------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------
+
+-- Showing stored procedure dbo.InserRoute
+PRINT'Showing stored procedure dbo.InserRoute' + char(10)
+-- Showing Route Table before one is inserted and after.
+PRINT 'Showing Route Table before one is inserted and after.' + char(10)
+
+SELECT * FROM ROUTE
+
+EXEC sp_InsertRoute
+@Distance = 80,
+@RouteRate = 2.50,
+@RouteName = 'Wasatch Front',
+@RouteDescription = 'Flight Across Wasatch Front',
+@HotelID = 2100
+GO
+
+SELECT * FROM ROUTE
+
+-- Showing Error Being Thrown if negative or 0 distance is entered
+PRINT 'Showing Error Being Thrown if negative or 0 distance is entered' + char(10)
+EXEC sp_InsertRoute
+@Distance = -1,
+@RouteRate = 2.50,
+@RouteName = 'Yellowstone',
+@RouteDescription = 'Flight Across Yellowstone',
+@HotelID = 2100
+GO
+
+SELECT * FROM ROUTE	
+GO
+
+
+-------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------
+
+--Showing UDF dbo.CalculateRouteRate
+PRINT 'Showing UDF dbo.CalculateRouteRate' + char(10)
+PRINT 'RouteRates are $2.50, $4.50, and $5.50. per mile'
+PRINT 'A tour less then 100 miles will have a $' + CONVERT(varchar(6), dbo.CalculateRouteRate(50)) + ' rate.'
+PRINT 'A tour between 100 and 200 miles will have a $' + CONVERT(varchar(6), dbo.CalculateRouteRate(101)) + ' rate.'
+PRINT 'A tour greater than 200 miles will have a $' + CONVERT(varchar(6), dbo.CalculateRouteRate(201)) + ' rate.'
+
+-------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------
+
+--Showing UDF dbo.CalculateSeatRate
+PRINT 'Showing UDF dbo.CalculateSeatRate' + char(10)
+PRINT 'This is to test dbo.CalculateSeatRate'
+PRINT 'IF we make a tour using Bumblebee and fly the Great Salt Lake route, the Seat Rate is $' + CONVERT(varchar(6),dbo.CalculateSeatRate(1, 2))
+PRINT 'IF we make a tour using Thor and fly the Salt Lake City route, the Seat Rate is $' + CONVERT(varchar(6),dbo.CalculateSeatRate(2, 5))
+
+-------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------
+
+--Showing UDF dbo.dbo.ProduceBill
+PRINT 'Showing UDF dbo.ProduceBill' + char(10)
+PRINT 'Testing dbo.ProduceBill'
+SELECT * FROM dbo.ProduceBill(1)
+GO
+
+-------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------
+
+--Showing tr_UpdateRouteRate
+PRINT'Showing trigger tr_UpdateRouteRate' +  CHAR (10)
+
+--Showing Route being inserted with distance of 50 but incorrect route rate
+PRINT'Showing Route being inserted with distance of 50 but incorrect route rate' + char(10)
+INSERT INTO ROUTE
+VALUES(50, 100, 'Bryce Canyon', 'Flight through the Bryce Canyon National Park', 2200)
+SELECT * FROM ROUTE
+GO
+
+--Showing Route being inserted with distance of 125 but incorrect route rate
+PRINT'Showing Route being inserted with distance of 125 but incorrect route rate' + char(10)
+INSERT INTO ROUTE
+VALUES(125, 3, 'Arches', 'Flight through the Arches National Park', 2300)
+SELECT * FROM ROUTE
+GO
+
+--Showing Route being inserted with distance of 225 but incorrect route rate
+PRINT'Showing Route being inserted with distance of 125 but incorrect route rate' + char(10)
+INSERT INTO ROUTE
+VALUES(225, 350, 'Bountiful', 'Flight through the city of Bountiful', 2300)
+SELECT * FROM ROUTE
+GO
+
+--Showing the previous routes distance being updated, causing the trigger to update the route rate to the correct value
+PRINT'Showing Route being inserted with distance of 125 but incorrect route rate' + char(10)
+UPDATE ROUTE
+SET Distance = 30
+WHERE RouteID = 10
+SELECT * FROM ROUTE
+GO
+
+-------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------
+
+--Showing Trigger tr_UpdateSeatRate
+PRINT 'TESTING tr_UpdateSeatRate' + char(10)
+SELECT * FROM TOUR
+
+INSERT INTO TOUR
+	VALUES('E', 100, 1, 2, 1)
+
+SELECT * FROM TOUR
+
+-------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------
+
+--Showing trigger tr_GenerateBill
+PRINT 'TESTING tr_GenerateBill with an insert statement into the bill table'
+
+SELECT c.CustomerID, CONCAT(c.CustFirst, ' ', c.CustLast) as Name, f.FlightCharterID, f.Status, f.GuestCount, t.SeatRate
+FROM CUSTOMER c
+JOIN RESERVATION r ON c.CustomerID = r.CustomerID
+JOIN FLIGHTCHARTER f ON r.ReservationID = f.ReservationID
+JOIN TOUR t ON f.TourID = t.TourID
+
+INSERT INTO BILLING
+	VALUES 
+		('Seat Rate TEST', 
+		(SELECT t.SeatRate FROM TOUR t JOIN FLIGHTCHARTER f ON t.TourID = f.TourID WHERE f.FlightCharterID = 5), 
+		(SELECT GuestCount FROM FLIGHTCHARTER WHERE FlightCharterID = 5),
+		GETDATE(),
+		5,
+		1)
+
+
+PRINT 'TESTING tr_GenerateBill with an update statement'
+UPDATE FLIGHTCHARTER 
+SET Status = 'C'
+WHERE FlightCharterID = 2
+GO
+
+-------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------
+
+--testing Trigger tr_FlightCharter
+PRINT 'testing Trigger tr_FlightCharter' +char(10)
+
 
 --Showing results of a FLIGHTCHARTER whose status is changed to ''C'' and ends up canceling 24 hours before.
 PRINT'Showing results of a FLIGHTCHARTER whose status is changed to ''C'' and ends up canceling 24 hours before.' + char(10)
@@ -966,11 +1175,7 @@ AS
 		SELECT @CustomerID = CustomerID FROM RESERVATION WHERE @ReservationID = ReservationID
 		SELECT @IsHotelGuest = isHotelGuest FROM CUSTOMER WHERE @CustomerID = CustomerID
 
-		--PRINT CAST(@tourtimestart AS VARCHAR(30))+ 'tourstart'
-		--PRINT CAST(@canceldate AS VARCHAR(30))+ 'cancel date'
-
 		SET @CancelDateDifference = DATEDIFF(HOUR, @CancelDate, @TourTimeStart)
-		--PRINT CAST(@CancelDateDifference AS VARCHAR(30))+ 'date difference'
 
 		IF @CancelDate is NULL
 			BEGIN
@@ -1028,3 +1233,8 @@ SELECT * FROM BILLING
 SELECT * FROM FLIGHTCHARTER
 
 GO
+
+USE MASTER
+GO
+DROP DATABASE IF EXISTS HEINER_RAMAILEH_HELICOPTERS
+PRINT 'DATABASE DROPPED'
